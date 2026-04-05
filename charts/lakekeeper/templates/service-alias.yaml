@@ -1,0 +1,20 @@
+{{/*
+  Alias service so that in-cluster traffic to lakekeeper.localhost
+  (via CoreDNS rewrite) reaches Lakekeeper on both ports.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-alias
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 30080
+      targetPort: 8181
+    - name: https
+      port: 30443
+      targetPort: 8181
+  selector:
+    app.kubernetes.io/name: lakekeeper
+    app.kubernetes.io/instance: {{ .Release.Name }}

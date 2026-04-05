@@ -1,0 +1,26 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: lakehouse-proxy
+  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: NodePort
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              ports:
+                - name: http
+                  port: 80
+                  targetPort: 10080
+                  nodePort: {{ .Values.gateway.httpNodePort }}
+                  protocol: TCP
+                - name: https
+                  port: 443
+                  targetPort: 10443
+                  nodePort: {{ .Values.gateway.httpsNodePort }}
+                  protocol: TCP

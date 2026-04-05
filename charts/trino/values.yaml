@@ -1,0 +1,48 @@
+trino:
+  server:
+    workers: 0
+    coordinatorExtraConfig: |
+      node-scheduler.include-coordinator=true
+      http-server.authentication.type=oauth2
+      http-server.authentication.oauth2.issuer=https://keycloak.localhost:30443/realms/iceberg
+      http-server.authentication.oauth2.oidc.discovery=false
+      http-server.authentication.oauth2.auth-url=https://keycloak.localhost:30443/realms/iceberg/protocol/openid-connect/auth
+      http-server.authentication.oauth2.jwks-url=http://keycloak-alias.keycloak.svc:30443/realms/iceberg/protocol/openid-connect/certs
+      http-server.authentication.oauth2.token-url=http://keycloak-alias.keycloak.svc:30443/realms/iceberg/protocol/openid-connect/token
+      http-server.authentication.oauth2.client-id=trino
+      http-server.authentication.oauth2.client-secret=AK48QgaKsqdEpP9PomRJw7l2T7qWGHdZ
+      http-server.authentication.oauth2.scopes=openid,trino
+
+      http-server.process-forwarded=true
+      http-server.authentication.allow-insecure-over-http=true
+      web-ui.authentication.type=oauth2
+      web-ui.enabled=true
+      internal-communication.shared-secret=workshop-shared-secret-change-me-in-production-1234567890
+
+  catalogs:
+    lakekeeper: |
+      connector.name=iceberg
+      iceberg.catalog.type=rest
+      iceberg.rest-catalog.uri=http://lakekeeper-alias.lakekeeper.svc:30080/catalog
+      iceberg.rest-catalog.warehouse=demo
+      iceberg.rest-catalog.security=OAUTH2
+      iceberg.rest-catalog.oauth2.credential=trino:AK48QgaKsqdEpP9PomRJw7l2T7qWGHdZ
+      iceberg.rest-catalog.oauth2.server-uri=http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token
+      iceberg.rest-catalog.oauth2.scope=lakekeeper
+      iceberg.rest-catalog.vended-credentials-enabled=true
+      fs.native-s3.enabled=true
+      s3.endpoint=http://s3.localhost:30080
+      s3.region=us-east-1
+      s3.path-style-access=true
+
+  accessControl:
+    type: properties
+    properties: |
+      access-control.name=opa
+      opa.policy.uri=http://lakekeeper-opa.lakekeeper.svc:8282/v1/data/trino/allow
+      opa.policy.batched-uri=http://lakekeeper-opa.lakekeeper.svc:8282/v1/data/trino/batch
+      opa.log-requests=true
+      opa.log-responses=true
+
+  service:
+    type: ClusterIP

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: lakekeeper
+description: Lakekeeper Iceberg REST Catalog with CNPG-managed PostgreSQL for the Open Source Lakehouse workshop
+version: 0.1.0
+type: application
+dependencies:
+  - name: lakekeeper
+    version: "0.10.0"
+    repository: https://lakekeeper.github.io/lakekeeper-charts

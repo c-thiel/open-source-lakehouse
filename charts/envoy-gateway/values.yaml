@@ -1,0 +1,11 @@
+gateway-helm:
+  config:
+    envoyGateway:
+      extensionApis:
+        enableEnvoyPatchPolicy: true
+
+
+gateway:
+  # NodePort values for kind extraPortMappings
+  httpNodePort: 30080
+  httpsNodePort: 30443

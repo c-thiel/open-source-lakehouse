@@ -1,0 +1,81 @@
+cnpg:
+  lakekeeper:
+    instances: 1
+    storageSize: 1Gi
+  openfga:
+    instances: 1
+    storageSize: 1Gi
+
+lakekeeper:
+  postgresql:
+    enabled: false
+
+  externalDatabase:
+    host_read: lakekeeper-pg-rw
+    host_write: lakekeeper-pg-rw
+    database: lakekeeper
+    user: lakekeeper
+    passwordSecret: lakekeeper-pg-app
+    passwordSecretKey: password
+
+  secretBackend:
+    postgres:
+      encryptionKeySecret: lakekeeper-encryption-key
+      encryptionKeySecretKey: encryptionKey
+
+  internalOpenFGA: true
+
+  authz:
+    backend: openfga
+
+  openfga:
+    datastore:
+      engine: postgres
+      uriSecret: openfga-pg-app
+    postgresql:
+      enabled: false
+    extraEnvVars:
+      - name: OPENFGA_DATASTORE_MAX_OPEN_CONNS
+        value: "200"
+      - name: OPENFGA_DATASTORE_MAX_IDLE_CONNS
+        value: "100"
+      - name: OPENFGA_CACHE_CONTROLLER_ENABLED
+        value: "true"
+      - name: OPENFGA_CHECK_QUERY_CACHE_ENABLED
+        value: "true"
+      - name: OPENFGA_CHECK_ITERATOR_CACHE_ENABLED
+        value: "true"
+
+  auth:
+    oauth2:
+      # Server-side OIDC discovery (in-cluster, plain HTTP via CoreDNS rewrite)
+      providerUri: "http://keycloak.localhost:30080/realms/iceberg"
+      audience: "lakekeeper"
+      # Browser tokens have this issuer (external HTTPS URL)
+      additionalIssuers:
+        - "https://keycloak.localhost:30443/realms/iceberg"
+      ui:
+        clientID: "lakekeeper"
+
+  catalog:
+    service:
+      type: ClusterIP
+    config:
+      LAKEKEEPER__ALLOW_ORIGIN: "*"
+      LAKEKEEPER__DEBUG__LOG_REQUEST_BODIES: "true"
+      LAKEKEEPER__UI__OPENID_PROVIDER_URI: "https://keycloak.localhost:30443/realms/iceberg"
+      RUST_LOG: "info,lakekeeper=debug"
+
+  OPABridge:
+    enabled: true
+    image:
+      tag: "1.12.1"
+    lakekeeper:
+      url: "http://localhost:8181"
+      tokenEndpoint: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token"
+      clientId: "opa-bridge"
+      clientSecret: "RCUlsviRgBaf8BtHvjSe1BGfmRoRS5KH"
+      scope: "lakekeeper"
+    catalogs:
+      - trinoCatalog: "lakekeeper"
+        lakekeeperWarehouse: "demo"

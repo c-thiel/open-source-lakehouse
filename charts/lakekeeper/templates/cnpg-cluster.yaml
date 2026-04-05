@@ -1,0 +1,40 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Release.Name }}-pg
+spec:
+  instances: {{ .Values.cnpg.lakekeeper.instances }}
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.4
+  enablePDB: false
+  affinity:
+    enablePodAntiAffinity: false
+  postgresql:
+    parameters:
+      shared_buffers: "64MB"
+  storage:
+    size: {{ .Values.cnpg.lakekeeper.storageSize }}
+  bootstrap:
+    initdb:
+      database: lakekeeper
+      owner: lakekeeper
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: openfga-pg
+spec:
+  instances: {{ .Values.cnpg.openfga.instances }}
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.4
+  enablePDB: false
+  affinity:
+    enablePodAntiAffinity: false
+  postgresql:
+    parameters:
+      shared_buffers: "64MB"
+      max_connections: "1000"
+  storage:
+    size: {{ .Values.cnpg.openfga.storageSize }}
+  bootstrap:
+    initdb:
+      database: openfga
+      owner: openfga

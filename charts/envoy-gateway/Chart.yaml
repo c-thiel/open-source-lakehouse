@@ -1,0 +1,9 @@
+apiVersion: v2
+name: envoy-gateway
+description: Envoy Gateway ingress with TLS for the Open Source Lakehouse workshop
+version: 0.1.0
+type: application
+dependencies:
+  - name: gateway-helm
+    version: "v1.7.1"
+    repository: oci://docker.io/envoyproxy
