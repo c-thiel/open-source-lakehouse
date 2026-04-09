@@ -9,6 +9,18 @@ authorization systems, query engines, and the Iceberg REST Catalog together on K
 ## Architecture
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'background':'#0b1220',
+  'primaryColor':'#1e293b',
+  'primaryTextColor':'#e2e8f0',
+  'primaryBorderColor':'#475569',
+  'lineColor':'#94a3b8',
+  'clusterBkg':'#1e293b',
+  'clusterBorder':'#64748b',
+  'titleColor':'#f1f5f9',
+  'edgeLabelBackground':'#1e293b',
+  'fontFamily':'Inter, system-ui, sans-serif'
+}}}%%
 flowchart TB
     classDef user      fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#92400e
     classDef gateway   fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
@@ -17,7 +29,7 @@ flowchart TB
     classDef engine    fill:#fce7f3,stroke:#ec4899,stroke-width:2px,color:#831843
     classDef storage   fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#7f1d1d
     classDef db        fill:#f1f5f9,stroke:#64748b,stroke-width:1px,color:#334155
-    classDef cluster   fill:#0f172a08,stroke:#0f172a,stroke-width:2px,color:#0f172a
+    classDef cluster   fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#f1f5f9
 
     subgraph clients ["💻 Workshop attendee's laptop"]
         direction LR
