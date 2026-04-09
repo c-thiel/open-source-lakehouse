@@ -6,6 +6,86 @@ You'll learn which OAuth2 flows to use for human and machine users, when to enfo
 permissions in the catalog versus the query engine, and how to wire identity providers,
 authorization systems, query engines, and the Iceberg REST Catalog together on Kubernetes.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    classDef user      fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#92400e
+    classDef gateway   fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
+    classDef idp       fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px,color:#5b21b6
+    classDef catalog   fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d
+    classDef engine    fill:#fce7f3,stroke:#ec4899,stroke-width:2px,color:#831843
+    classDef storage   fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#7f1d1d
+    classDef db        fill:#f1f5f9,stroke:#64748b,stroke-width:1px,color:#334155
+    classDef cluster   fill:#0f172a08,stroke:#0f172a,stroke-width:2px,color:#0f172a
+
+    subgraph clients ["💻 Workshop attendee's laptop"]
+        direction LR
+        Human["👤 Browser"]:::user
+        Scripts["🐍 Local scripts<br/>PyIceberg · Spark · DuckDB"]:::user
+    end
+
+    subgraph k8s ["☸ Kubernetes (kind)"]
+        Gateway(["Envoy Gateway<br/><i>:30080 / :30443</i>"]):::gateway
+
+        subgraph kc ["📛 keycloak"]
+            Keycloak["Keycloak<br/>OIDC + OAuth2"]:::idp
+            KCDB[("Postgres<br/>CNPG")]:::db
+        end
+
+        subgraph engines ["⚙ trino · starrocks"]
+            direction LR
+            Trino["Trino"]:::engine
+            StarRocks["StarRocks"]:::engine
+        end
+
+        subgraph lk ["📚 lakekeeper"]
+            Lakekeeper["Lakekeeper<br/>Iceberg REST Catalog"]:::catalog
+            OpenFGA["OpenFGA<br/>fine-grained authz"]:::catalog
+            LKDB[("Postgres<br/>CNPG")]:::db
+            FGADB[("Postgres<br/>CNPG")]:::db
+        end
+
+        subgraph s3 ["🪣 seaweedfs"]
+            Seaweed["SeaweedFS<br/>S3-compatible"]:::storage
+        end
+    end
+
+    %% --- ingress ---
+    Human   -->|"OAuth2 (auth code)"| Gateway
+    Scripts -->|"OAuth2 (client_credentials / device code)"| Gateway
+
+    Gateway --> Keycloak
+    Gateway --> Lakekeeper
+    Gateway --> Trino
+    Gateway --> StarRocks
+    Gateway --> Seaweed
+
+    %% --- catalog access ---
+    Trino     -->|"Iceberg REST + JWT"| Lakekeeper
+    StarRocks -->|"Iceberg REST + JWT"| Lakekeeper
+    Scripts   -->|"Iceberg REST + JWT"| Lakekeeper
+
+    %% --- S3 data plane ---
+    Lakekeeper -->|"vended creds /<br/>remote signing"| Seaweed
+    Trino     --> Seaweed
+    StarRocks --> Seaweed
+    Scripts   --> Seaweed
+
+    %% --- internal wiring ---
+    Lakekeeper --- LKDB
+    Lakekeeper -->|"check / write tuples"| OpenFGA
+    OpenFGA --- FGADB
+    Keycloak --- KCDB
+
+    %% --- OIDC discovery ---
+    Lakekeeper -->|"JWKS"| Keycloak
+    Trino      -->|"JWKS"| Keycloak
+    StarRocks  -->|"JWKS"| Keycloak
+
+    class k8s cluster
+```
+
 ## Components
 
 | Component | Purpose | Namespace |
