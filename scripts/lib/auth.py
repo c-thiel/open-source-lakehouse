@@ -1,12 +1,7 @@
 """OAuth2 token helper for Keycloak."""
 
 import httpx
-
-from lib.config import (
-    ADMIN_CLIENT_ID,
-    ADMIN_CLIENT_SECRET,
-    KEYCLOAK_TOKEN_URL,
-)
+from lib.config import ADMIN_CLIENT_ID, ADMIN_CLIENT_SECRET, KEYCLOAK_TOKEN_URL
 
 
 def get_token(client_id: str, client_secret: str, scope: str = "lakekeeper") -> str:

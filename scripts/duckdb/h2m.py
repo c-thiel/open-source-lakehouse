@@ -11,16 +11,11 @@ device-code flow ourselves with httpx and hand DuckDB the result.
 Login as `peter` (full warehouse) or `anna` (only finance.product).
 """
 
-import sys
 import time
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import duckdb
 import httpx
 import urllib3
-
 from lib.config import CATALOG_URL, KEYCLOAK_URL, WAREHOUSE_NAME
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

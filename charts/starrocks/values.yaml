@@ -18,7 +18,7 @@ oauth2:
   authServerUrl: "https://keycloak.localtest.me:30443/realms/iceberg/protocol/openid-connect/auth"
   tokenServerUrl: "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
   jwksUrl: "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/certs"
-  issuer: "https://keycloak.localtest.me:30443/realms/iceberg"
+  issuer: "http://keycloak.localtest.me:30080/realms/iceberg"
   audience: "starrocks"
   principalField: "preferred_username"
   clientId: "starrocks"

@@ -8,23 +8,11 @@ a fresh client_credentials token before each request when needed.
 Switch service principal via WORKSHOP_SP env var (default airflow-sp-1).
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 import threading
 import time
 
 import httpx
-from requests.auth import AuthBase
-from trino.auth import Authentication
-from trino.dbapi import connect
-
+import urllib3
 from lib.config import (
     KEYCLOAK_TOKEN_URL,
     NAMESPACE_NAME,
@@ -32,7 +20,11 @@ from lib.config import (
     REVENUE_TABLE_FQN,
     get_sp,
 )
+from requests.auth import AuthBase
+from trino.auth import Authentication
+from trino.dbapi import connect
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TRINO_HOST = "trino.localtest.me"
 TRINO_PORT = 30443
@@ -90,7 +82,9 @@ class _RefreshingBearerAuth(AuthBase):
 
 class ClientCredentialsAuthentication(Authentication):
     def __init__(self, token_url: str, client_id: str, client_secret: str, scope: str):
-        self._provider = ClientCredentialsTokenProvider(token_url, client_id, client_secret, scope)
+        self._provider = ClientCredentialsTokenProvider(
+            token_url, client_id, client_secret, scope
+        )
 
     def set_http_session(self, http_session):
         http_session.auth = _RefreshingBearerAuth(self._provider)

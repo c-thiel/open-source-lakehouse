@@ -15,11 +15,18 @@ dependencies = [
     "duckdb>=1.4.0",
 ]
 
-[tool.pyright]
-extraPaths = ["."]
-reportImplicitRelativeImport = false
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.basedpyright]
-extraPaths = ["."]
-reportImplicitRelativeImport = false
+[tool.hatch.build.targets.wheel]
+# Install just the shared `lib` package — script subfolders (00_setup, oauth,
+# trino, ...) have leading digits and aren't valid module names anyway, so
+# they're meant to be run as files, not imported.
+packages = ["lib"]
+
+[tool.uv]
+# Install the workshop project itself in editable mode so `from lib.config
+# import ...` works from any script without sys.path hacks.
+package = true
 

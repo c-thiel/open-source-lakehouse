@@ -5,20 +5,10 @@ Pick the human user when prompted in the browser:
   - anna  / iceberg  → table SELECT on finance.product only; revenue fails
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 import time
 
 import httpx
-from pyiceberg.catalog import Catalog, load_catalog
-
+import urllib3
 from lib.config import (
     CATALOG_URL,
     KEYCLOAK_URL,
@@ -27,6 +17,9 @@ from lib.config import (
     REVENUE_TABLE_FQN,
     WAREHOUSE_NAME,
 )
+from pyiceberg.catalog import Catalog, load_catalog
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 HUMAN_CLIENT_ID = "lakekeeper"

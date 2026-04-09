@@ -8,22 +8,11 @@ call would start failing once the access token expires after a few minutes.
 Pick the user when prompted: peter (full) or anna (product only).
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 import threading
 import time
 
 import httpx
-from pyiceberg.catalog import load_catalog
-from pyiceberg.catalog.rest.auth import AuthManager, AuthManagerFactory
-
+import urllib3
 from lib.config import (
     CATALOG_URL,
     KEYCLOAK_URL,
@@ -32,6 +21,10 @@ from lib.config import (
     REVENUE_TABLE_FQN,
     WAREHOUSE_NAME,
 )
+from pyiceberg.catalog import load_catalog
+from pyiceberg.catalog.rest.auth import AuthManager, AuthManagerFactory
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 HUMAN_CLIENT_ID = "lakekeeper"

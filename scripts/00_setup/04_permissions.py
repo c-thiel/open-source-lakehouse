@@ -18,14 +18,8 @@ Three tiers:
      must fail with 'forbidden'. That's the demo.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import httpx
 import urllib3
-
 from lib.auth import admin_headers, get_token
 from lib.config import (
     AIRFLOW_CLIENT_1_ID,
@@ -55,6 +49,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def ensure_user_exists(client_id: str, client_secret: str) -> None:
     """Trigger a catalog config call so the SP appears in Lakekeeper's user list."""
@@ -90,7 +85,9 @@ def list_users(headers: dict) -> dict[str, str]:
 
 
 def find_warehouse_id(headers: dict, name: str) -> str:
-    response = httpx.get(f"{MANAGEMENT_URL}/v1/warehouse", headers=headers, verify=False)
+    response = httpx.get(
+        f"{MANAGEMENT_URL}/v1/warehouse", headers=headers, verify=False
+    )
     response.raise_for_status()
     for wh in response.json().get("warehouses", []):
         if wh.get("name") == name:
@@ -122,12 +119,16 @@ def find_table_id(headers: dict, warehouse_id: str, namespace: str, table: str) 
 def write_assignments(headers: dict, url: str, writes: list[dict]) -> None:
     existing_resp = httpx.get(url, headers=headers, verify=False)
     existing_resp.raise_for_status()
-    existing = {(a["type"], a["user"]) for a in existing_resp.json().get("assignments", [])}
+    existing = {
+        (a["type"], a["user"]) for a in existing_resp.json().get("assignments", [])
+    }
     new_writes = [w for w in writes if (w["type"], w["user"]) not in existing]
     if not new_writes:
         print("  (all assignments already exist)")
         return
-    response = httpx.post(url, headers=headers, json={"writes": new_writes}, verify=False)
+    response = httpx.post(
+        url, headers=headers, json={"writes": new_writes}, verify=False
+    )
     response.raise_for_status()
     for w in new_writes:
         print(f"  ✓ {w['type']} → {w['user']}")
@@ -136,6 +137,7 @@ def write_assignments(headers: dict, url: str, writes: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     headers = admin_headers()
@@ -162,45 +164,59 @@ def main():
             raise SystemExit(f"User {name!r} not registered in Lakekeeper.")
         return u
 
-    sp_trino    = uid(f"service-account-{TRINO_CLIENT_ID}")
-    sp_starr    = uid(f"service-account-{STARROCKS_CLIENT_ID}")
-    sp_spark    = uid(f"service-account-{SPARK_CLIENT_ID}")
-    sp_opa      = uid(f"service-account-{OPA_BRIDGE_CLIENT_ID}")
-    sp_air1     = uid(f"service-account-{AIRFLOW_CLIENT_1_ID}")
-    sp_air2     = uid(f"service-account-{AIRFLOW_CLIENT_2_ID}")
+    sp_trino = uid(f"service-account-{TRINO_CLIENT_ID}")
+    sp_starr = uid(f"service-account-{STARROCKS_CLIENT_ID}")
+    sp_spark = uid(f"service-account-{SPARK_CLIENT_ID}")
+    sp_opa = uid(f"service-account-{OPA_BRIDGE_CLIENT_ID}")
+    sp_air1 = uid(f"service-account-{AIRFLOW_CLIENT_1_ID}")
+    sp_air2 = uid(f"service-account-{AIRFLOW_CLIENT_2_ID}")
 
-    server_url  = f"{MANAGEMENT_URL}/v1/permissions/server/assignments"
+    server_url = f"{MANAGEMENT_URL}/v1/permissions/server/assignments"
     project_url = f"{MANAGEMENT_URL}/v1/permissions/project/assignments"
 
     # 2. Server-level: operators only
     print("\nServer operators (engine catalog wiring)...")
-    write_assignments(headers, server_url, [
-        {"type": "operator", "user": sp_opa},
-        {"type": "operator", "user": sp_trino},
-        {"type": "operator", "user": sp_starr},
-    ])
+    write_assignments(
+        headers,
+        server_url,
+        [
+            {"type": "operator", "user": sp_opa},
+            {"type": "operator", "user": sp_trino},
+            {"type": "operator", "user": sp_starr},
+        ],
+    )
 
     # StarRocks bootstrap fetchConfig needs project-level describe to resolve
     # the warehouse before any user is logged in. This is the ONE project-
     # level grant that survives — it's a structural requirement, not a
     # user-level permission.
     print("\nStarRocks project describe (bootstrap fetchConfig)...")
-    write_assignments(headers, project_url, [
-        {"type": "describe", "user": sp_starr},
-    ])
+    write_assignments(
+        headers,
+        project_url,
+        [
+            {"type": "describe", "user": sp_starr},
+        ],
+    )
 
     # 3. Warehouse modify for the trusted set
     warehouse_id = find_warehouse_id(headers, WAREHOUSE_NAME)
-    warehouse_url = f"{MANAGEMENT_URL}/v1/permissions/warehouse/{warehouse_id}/assignments"
+    warehouse_url = (
+        f"{MANAGEMENT_URL}/v1/permissions/warehouse/{warehouse_id}/assignments"
+    )
 
     print(f"\nWarehouse '{WAREHOUSE_NAME}' ownership + modify...")
-    write_assignments(headers, warehouse_url, [
-        {"type": "ownership", "user": PETER_USER_ID},
-        {"type": "modify", "user": sp_spark},
-        {"type": "modify", "user": sp_trino},
-        {"type": "modify", "user": sp_starr},
-        {"type": "modify", "user": sp_air1},
-    ])
+    write_assignments(
+        headers,
+        warehouse_url,
+        [
+            {"type": "ownership", "user": PETER_USER_ID},
+            {"type": "modify", "user": sp_spark},
+            {"type": "modify", "user": sp_trino},
+            {"type": "modify", "user": sp_starr},
+            {"type": "modify", "user": sp_air1},
+        ],
+    )
 
     # 4. Table-level SELECT on finance.product for the restricted set
     table_id = find_table_id(headers, warehouse_id, NAMESPACE_NAME, TABLE_PRODUCT)
@@ -210,10 +226,14 @@ def main():
     )
 
     print(f"\nTable '{NAMESPACE_NAME}.{TABLE_PRODUCT}' select (restricted set)...")
-    write_assignments(headers, table_url, [
-        {"type": "select", "user": sp_air2},
-        {"type": "select", "user": ANNA_USER_ID},
-    ])
+    write_assignments(
+        headers,
+        table_url,
+        [
+            {"type": "select", "user": sp_air2},
+            {"type": "select", "user": ANNA_USER_ID},
+        ],
+    )
 
     print("\nDone.")
 

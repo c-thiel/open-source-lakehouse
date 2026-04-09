@@ -2,17 +2,6 @@
 
 import os
 import sys
-from pathlib import Path
-
-# --- Import shim helper ---------------------------------------------------
-# Scripts in subfolders import from `lib.config` — but only when run with the
-# scripts/ directory on sys.path. Each script in 00_setup/, oauth/, pyiceberg/,
-# trino/, starrocks/ adds the following two lines at the top:
-#
-#     import sys; from pathlib import Path
-#     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-#
-# That makes `from lib.config import ...` work no matter the cwd.
 
 # --- Lakekeeper -----------------------------------------------------------
 LAKEKEEPER_URL = "http://lakekeeper.localtest.me:30080"
@@ -25,7 +14,9 @@ KEYCLOAK_URL = "https://keycloak.localtest.me:30443"
 # Plain-HTTP token endpoint for scripts and m2m flows. Avoids the self-signed
 # cert headache for libraries (e.g. PyIceberg's auth manager) that don't
 # expose a way to disable TLS verification on the token request.
-KEYCLOAK_TOKEN_URL = "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
+KEYCLOAK_TOKEN_URL = (
+    "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
+)
 
 # --- Bootstrap admin client ----------------------------------------------
 ADMIN_CLIENT_ID = "lakehouse-admin"

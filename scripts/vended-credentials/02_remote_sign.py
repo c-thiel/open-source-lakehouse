@@ -19,15 +19,10 @@ mechanics are visible:
 """
 
 import io
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import httpx
 import urllib3
 from botocore.awsrequest import AWSRequest
-
 from lib.auth import get_token
 from lib.config import (
     CATALOG_URL,
@@ -89,7 +84,9 @@ def main() -> None:
     s3_endpoint = table_config.get("s3.endpoint", "http://s3.localtest.me:30080")
     object_url = f"{s3_endpoint.rstrip('/')}/{bucket}/{key}"
 
-    aws_request = AWSRequest(method="GET", url=object_url, headers={"host": httpx.URL(object_url).host})
+    aws_request = AWSRequest(
+        method="GET", url=object_url, headers={"host": httpx.URL(object_url).host}
+    )
 
     # --- 4. POST request metadata to Lakekeeper's signer ------------------
     sign_body = {

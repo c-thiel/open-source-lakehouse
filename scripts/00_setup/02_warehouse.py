@@ -1,14 +1,9 @@
 """Create the demo warehouse if missing; print a diff if it already exists."""
 
 import json
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import httpx
 import urllib3
-
 from lib.auth import admin_headers
 from lib.config import (
     MANAGEMENT_URL,
@@ -45,7 +40,23 @@ DESIRED_WAREHOUSE = {
 
 
 def get_existing(headers: dict) -> dict | None:
-    response = httpx.get(f"{MANAGEMENT_URL}/v1/warehouse", headers=headers, verify=False)
+    response = httpx.get(
+        f"{MANAGEMENT_URL}/v1/warehouse", headers=headers, verify=False
+    )
+    if response.status_code == 403:
+        raise SystemExit(
+            "\n✗ Lakekeeper rejected the bootstrap admin client (403 Forbidden).\n"
+            "\n"
+            "  This usually means you bootstrapped Lakekeeper manually (e.g. via\n"
+            "  the UI as a human user) instead of letting `01_bootstrap.py` do it\n"
+            "  with the `lakehouse-admin` client. The lakehouse-admin service\n"
+            "  principal therefore has no permissions yet.\n"
+            "\n"
+            "  Fix: open the Lakekeeper UI as the human admin you bootstrapped\n"
+            "  with, go to Server → Permissions, and grant the principal\n"
+            "  `service-account-lakehouse-admin` the `operator` privilege\n"
+            "  on the server. Then re-run this script.\n"
+        )
     response.raise_for_status()
     for wh in response.json().get("warehouses", []):
         if wh.get("name") == WAREHOUSE_NAME:
@@ -68,8 +79,25 @@ def diff_storage(existing: dict, desired: dict) -> list[str]:
     return diffs
 
 
+def self_provision(headers: dict) -> None:
+    """Register the bootstrap admin in Lakekeeper's user list.
+
+    Without this, the admin service principal exists in Keycloak but
+    Lakekeeper has never seen it, so it doesn't show up in the UI's user
+    table. Workshop attendees expect to see *all* the principals up-front.
+    POSTing /v1/user with an empty body is the documented self-provision
+    call — Lakekeeper extracts the identity from the bearer token.
+    """
+    httpx.post(f"{MANAGEMENT_URL}/v1/user", headers=headers, json={}, verify=False)
+
+
 def main():
     headers = admin_headers()
+
+    # Self-provision early so the admin shows up in the UI even before any
+    # warehouse work happens.
+    self_provision(headers)
+
     existing = get_existing(headers)
 
     if existing is None:

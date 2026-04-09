@@ -6,15 +6,8 @@ as peter or anna and the same authz story plays out:
   - anna  → reads finance.product, fails on finance.revenue
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+from lib.config import NAMESPACE_NAME, PRODUCT_TABLE_FQN, REVENUE_TABLE_FQN
 from trino.auth import (
     CompositeRedirectHandler,
     OAuth2Authentication,
@@ -22,12 +15,7 @@ from trino.auth import (
 )
 from trino.dbapi import connect
 
-from lib.config import (
-    NAMESPACE_NAME,
-    PRODUCT_TABLE_FQN,
-    REVENUE_TABLE_FQN,
-)
-
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TRINO_HOST = "trino.localtest.me"
 TRINO_PORT = 30443
@@ -52,7 +40,9 @@ def main():
     conn = connect(
         host=TRINO_HOST,
         port=TRINO_PORT,
-        auth=OAuth2Authentication(CompositeRedirectHandler([WebBrowserRedirectHandler()])),
+        auth=OAuth2Authentication(
+            CompositeRedirectHandler([WebBrowserRedirectHandler()])
+        ),
         http_scheme="https",
         verify=False,
         catalog=CATALOG,

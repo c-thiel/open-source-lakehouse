@@ -10,26 +10,19 @@ This script:
   3. Uses the token to list projects in Lakekeeper
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 import base64
 import json
 
 import httpx
-
+import urllib3
 from lib.config import (
     KEYCLOAK_TOKEN_URL,
     MANAGEMENT_URL,
     SPARK_CLIENT_ID,
     SPARK_CLIENT_SECRET,
 )
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def main():

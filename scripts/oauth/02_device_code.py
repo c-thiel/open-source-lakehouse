@@ -12,23 +12,15 @@ This script:
   5. Uses the token to list projects in Lakekeeper
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 import base64
 import json
 import time
 
 import httpx
-
+import urllib3
 from lib.config import KEYCLOAK_URL, MANAGEMENT_URL
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 HUMAN_CLIENT_ID = "lakekeeper"
 DEVICE_CODE_URL = f"{KEYCLOAK_URL}/realms/iceberg/protocol/openid-connect/auth/device"

@@ -12,14 +12,9 @@ prints the returned `config` dict so you can see the vended credentials.
 """
 
 import json
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import httpx
 import urllib3
-
 from lib.auth import get_token
 from lib.config import (
     CATALOG_URL,

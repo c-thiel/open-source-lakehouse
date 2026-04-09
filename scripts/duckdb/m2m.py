@@ -1,15 +1,9 @@
 """DuckDB m2m: connect to Lakekeeper's Iceberg REST catalog as airflow-sp-1.
 
-    python duckdb/m2m.py
+python duckdb/m2m.py
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import duckdb
-
 from lib.config import (
     AIRFLOW_CLIENT_1_ID,
     AIRFLOW_CLIENT_1_SECRET,

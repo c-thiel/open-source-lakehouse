@@ -25,13 +25,7 @@ About the dual Keycloak URLs:
     because the FE itself fetches them from inside the kind cluster.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import pymysql
-
 from lib.config import (
     CATALOG_URL,
     KEYCLOAK_URL,
@@ -39,7 +33,6 @@ from lib.config import (
     STARROCKS_CLIENT_SECRET,
     WAREHOUSE_NAME,
 )
-
 
 CATALOG_NAME = "lakekeeper"
 
@@ -49,7 +42,9 @@ KEYCLOAK_INCLUSTER_TOKEN_URL = (
 KEYCLOAK_INCLUSTER_JWKS_URL = (
     "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/certs"
 )
-KEYCLOAK_BROWSER_AUTH_URL = f"{KEYCLOAK_URL}/realms/iceberg/protocol/openid-connect/auth"
+KEYCLOAK_BROWSER_AUTH_URL = (
+    f"{KEYCLOAK_URL}/realms/iceberg/protocol/openid-connect/auth"
+)
 KEYCLOAK_ISSUER = f"{KEYCLOAK_URL}/realms/iceberg"
 STARROCKS_REDIRECT_URL = "http://starrocks.localtest.me:30080/api/oauth2"
 
@@ -74,7 +69,8 @@ def main():
         print(f"  (ignored) {e}")
 
     print(f"\nCreating catalog '{CATALOG_NAME}' with JWT passthrough...")
-    cur.execute(f"""
+    cur.execute(
+        f"""
         CREATE EXTERNAL CATALOG `{CATALOG_NAME}`
         PROPERTIES (
             "type" = "iceberg",
@@ -91,22 +87,25 @@ def main():
             "aws.s3.enable_path_style_access" = "true",
             "enable_iceberg_metadata_disk_cache" = "false"
         )
-    """)
+    """
+    )
     print("  ✓ Catalog created")
 
-    print(f"\nGranting catalog access on '{CATALOG_NAME}' to role public...")
-    cur.execute(f"GRANT USAGE ON CATALOG `{CATALOG_NAME}` TO ROLE public")
+    print(f"\nGranting catalog access on '{CATALOG_NAME}' to role lk_reader...")
+    cur.execute("CREATE ROLE IF NOT EXISTS lk_reader")
+    cur.execute(f"GRANT USAGE ON CATALOG `{CATALOG_NAME}` TO ROLE lk_reader")
     cur.execute(f"SET CATALOG `{CATALOG_NAME}`")
-    cur.execute("GRANT SELECT ON ALL TABLES IN ALL DATABASES TO ROLE public")
+    cur.execute("GRANT SELECT ON ALL TABLES IN ALL DATABASES TO ROLE lk_reader")
     cur.execute("SET CATALOG default_catalog")
-    print("  ✓ public role can USAGE the catalog and SELECT all tables")
+    print("  ✓ lk_reader role can USAGE the catalog and SELECT all tables")
 
     print("\nCreating OAuth2 security integration 'keycloak_oauth2'...")
     try:
         cur.execute("DROP SECURITY INTEGRATION keycloak_oauth2")
     except (pymysql.err.OperationalError, pymysql.err.ProgrammingError) as e:
         print(f"  (no existing integration to drop) {e}")
-    cur.execute(f"""
+    cur.execute(
+        f"""
         CREATE SECURITY INTEGRATION keycloak_oauth2 PROPERTIES (
             "type"              = "authentication_oauth2",
             "auth_server_url"   = "{KEYCLOAK_BROWSER_AUTH_URL}",
@@ -119,7 +118,8 @@ def main():
             "required_issuer"   = "{KEYCLOAK_ISSUER}",
             "required_audience" = "{STARROCKS_CLIENT_ID}"
         )
-    """)
+    """
+    )
     cur.execute(
         'ADMIN SET FRONTEND CONFIG ("authentication_chain" = "keycloak_oauth2,native")'
     )

@@ -1,15 +1,9 @@
 """Bootstrap Lakekeeper once with the admin client. Idempotent."""
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 from typing import cast
 
 import httpx
 import urllib3
-
 from lib.auth import admin_headers
 from lib.config import MANAGEMENT_URL
 

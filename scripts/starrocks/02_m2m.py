@@ -14,25 +14,13 @@ Flow:
      fails because Lakekeeper denies it.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import os
 import tempfile
 
 import mysql.connector
 import pymysql
-
 from lib.auth import get_token
-from lib.config import (
-    NAMESPACE_NAME,
-    PRODUCT_TABLE_FQN,
-    REVENUE_TABLE_FQN,
-    get_sp,
-)
-
+from lib.config import NAMESPACE_NAME, PRODUCT_TABLE_FQN, REVENUE_TABLE_FQN, get_sp
 
 STARROCKS_HOST = "127.0.0.1"
 STARROCKS_MYSQL_PORT = 30930
@@ -40,14 +28,21 @@ CATALOG_NAME = "lakekeeper"
 
 
 def bootstrap_user(sr_username: str) -> None:
-    """As root: ensure the JWT user exists. Privileges come from public role."""
+    """As root: ensure the JWT user exists and has the lk_reader role
+    (carries the catalog grants from 01_catalog.py). Lakekeeper enforces
+    per-table authz against the forwarded JWT.
+    """
     print(f"Bootstrapping StarRocks JWT user '{sr_username}' (as root)...")
-    conn = pymysql.connect(host=STARROCKS_HOST, port=STARROCKS_MYSQL_PORT, user="root", password="")
+    conn = pymysql.connect(
+        host=STARROCKS_HOST, port=STARROCKS_MYSQL_PORT, user="root", password=""
+    )
     cur = conn.cursor()
     cur.execute(
         f"CREATE USER IF NOT EXISTS '{sr_username}' IDENTIFIED WITH authentication_jwt"
     )
-    print(f"  ✓ User '{sr_username}' (catalog access via role public)")
+    cur.execute(f"GRANT lk_reader TO USER '{sr_username}'")
+    cur.execute(f"SET DEFAULT ROLE lk_reader TO '{sr_username}'")
+    print(f"  ✓ User '{sr_username}' (default role: lk_reader)")
     conn.close()
 
 

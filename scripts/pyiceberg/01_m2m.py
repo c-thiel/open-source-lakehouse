@@ -9,17 +9,7 @@ The two runs read both finance.product and finance.revenue. With sp-2, the
 revenue read fails with 'forbidden' — that's the authz demo.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-from pyiceberg.catalog import load_catalog
-
 from lib.config import (
     CATALOG_URL,
     KEYCLOAK_TOKEN_URL,
@@ -29,6 +19,9 @@ from lib.config import (
     WAREHOUSE_NAME,
     get_sp,
 )
+from pyiceberg.catalog import load_catalog
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def read_table(catalog, fqn: str) -> None:
@@ -44,7 +37,9 @@ def read_table(catalog, fqn: str) -> None:
 def main():
     sp_id, sp_secret = get_sp()
 
-    print(f"\nLoading PyIceberg catalog as {sp_id} (PyIceberg fetches its own token)...")
+    print(
+        f"\nLoading PyIceberg catalog as {sp_id} (PyIceberg fetches its own token)..."
+    )
     catalog = load_catalog(
         "lakekeeper",
         type="rest",

@@ -6,19 +6,10 @@ all rights anyway. The same script is idempotent: if the namespace/tables
 already exist with the right schema, it appends nothing.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import datetime as _dt
 
 import pyarrow as pa
-from pyiceberg.catalog import load_catalog
-from pyiceberg.exceptions import NamespaceAlreadyExistsError, TableAlreadyExistsError
-
+import urllib3
 from lib.config import (
     ADMIN_CLIENT_ID,
     ADMIN_CLIENT_SECRET,
@@ -33,44 +24,65 @@ from lib.config import (
     S3_SECRET_KEY,
     WAREHOUSE_NAME,
 )
+from pyiceberg.catalog import load_catalog
+from pyiceberg.exceptions import NamespaceAlreadyExistsError, TableAlreadyExistsError
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-PRODUCT_SCHEMA = pa.schema([
-    pa.field("product_id", pa.int32(), nullable=False),
-    pa.field("name", pa.string(), nullable=False),
-    pa.field("category", pa.string(), nullable=False),
-    pa.field("list_price", pa.float64(), nullable=False),
-])
+PRODUCT_SCHEMA = pa.schema(
+    [
+        pa.field("product_id", pa.int32(), nullable=False),
+        pa.field("name", pa.string(), nullable=False),
+        pa.field("category", pa.string(), nullable=False),
+        pa.field("list_price", pa.float64(), nullable=False),
+    ]
+)
 
-REVENUE_SCHEMA = pa.schema([
-    pa.field("date", pa.date32(), nullable=False),
-    pa.field("product_id", pa.int32(), nullable=False),
-    pa.field("units", pa.int32(), nullable=False),
-    pa.field("amount", pa.float64(), nullable=False),
-])
+REVENUE_SCHEMA = pa.schema(
+    [
+        pa.field("date", pa.date32(), nullable=False),
+        pa.field("product_id", pa.int32(), nullable=False),
+        pa.field("units", pa.int32(), nullable=False),
+        pa.field("amount", pa.float64(), nullable=False),
+    ]
+)
 
 PRODUCT_ROWS = pa.Table.from_pylist(
     [
-        {"product_id": 1, "name": "Pickaxe",       "category": "tools",     "list_price": 19.99},
-        {"product_id": 2, "name": "Shovel",        "category": "tools",     "list_price": 14.50},
-        {"product_id": 3, "name": "Lantern",       "category": "lighting",  "list_price": 29.95},
-        {"product_id": 4, "name": "Compass",       "category": "navigation","list_price": 12.00},
-        {"product_id": 5, "name": "Climbing Rope", "category": "safety",    "list_price": 49.00},
+        {"product_id": 1, "name": "Pickaxe", "category": "tools", "list_price": 19.99},
+        {"product_id": 2, "name": "Shovel", "category": "tools", "list_price": 14.50},
+        {
+            "product_id": 3,
+            "name": "Lantern",
+            "category": "lighting",
+            "list_price": 29.95,
+        },
+        {
+            "product_id": 4,
+            "name": "Compass",
+            "category": "navigation",
+            "list_price": 12.00,
+        },
+        {
+            "product_id": 5,
+            "name": "Climbing Rope",
+            "category": "safety",
+            "list_price": 49.00,
+        },
     ],
     schema=PRODUCT_SCHEMA,
 )
 
-import datetime as _dt
-
 REVENUE_ROWS = pa.Table.from_pylist(
     [
-        {"date": _dt.date(2026, 1, 5),  "product_id": 1, "units": 12, "amount": 239.88},
-        {"date": _dt.date(2026, 1, 5),  "product_id": 2, "units":  8, "amount": 116.00},
-        {"date": _dt.date(2026, 1, 6),  "product_id": 3, "units":  3, "amount":  89.85},
-        {"date": _dt.date(2026, 1, 7),  "product_id": 5, "units":  2, "amount":  98.00},
-        {"date": _dt.date(2026, 2, 1),  "product_id": 1, "units": 20, "amount": 399.80},
-        {"date": _dt.date(2026, 2, 1),  "product_id": 4, "units":  6, "amount":  72.00},
-        {"date": _dt.date(2026, 2, 14), "product_id": 3, "units":  4, "amount": 119.80},
+        {"date": _dt.date(2026, 1, 5), "product_id": 1, "units": 12, "amount": 239.88},
+        {"date": _dt.date(2026, 1, 5), "product_id": 2, "units": 8, "amount": 116.00},
+        {"date": _dt.date(2026, 1, 6), "product_id": 3, "units": 3, "amount": 89.85},
+        {"date": _dt.date(2026, 1, 7), "product_id": 5, "units": 2, "amount": 98.00},
+        {"date": _dt.date(2026, 2, 1), "product_id": 1, "units": 20, "amount": 399.80},
+        {"date": _dt.date(2026, 2, 1), "product_id": 4, "units": 6, "amount": 72.00},
+        {"date": _dt.date(2026, 2, 14), "product_id": 3, "units": 4, "amount": 119.80},
     ],
     schema=REVENUE_SCHEMA,
 )
@@ -113,7 +125,9 @@ def main():
         except TableAlreadyExistsError:
             table = catalog.load_table(fqn)
             existing = table.scan().to_arrow()
-            print(f"  (already exists with {existing.num_rows} rows — leaving untouched)")
+            print(
+                f"  (already exists with {existing.num_rows} rows — leaving untouched)"
+            )
 
     print("\nDone.")
 

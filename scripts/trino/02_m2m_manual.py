@@ -5,26 +5,13 @@ Switch service principal via WORKSHOP_SP env var:
   WORKSHOP_SP=airflow-sp-2 → reads product, fails on revenue
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+from lib.auth import get_token
+from lib.config import NAMESPACE_NAME, PRODUCT_TABLE_FQN, REVENUE_TABLE_FQN, get_sp
 from trino.auth import JWTAuthentication
 from trino.dbapi import connect
 
-from lib.auth import get_token
-from lib.config import (
-    NAMESPACE_NAME,
-    PRODUCT_TABLE_FQN,
-    REVENUE_TABLE_FQN,
-    get_sp,
-)
-
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TRINO_HOST = "trino.localtest.me"
 TRINO_PORT = 30443

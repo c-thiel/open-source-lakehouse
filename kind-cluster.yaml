@@ -8,6 +8,8 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-labels: "ingress-ready=true"
+            # Helps with Starrocks
+            pod-pids-limit: "16384"
     extraPortMappings:
       # Envoy Gateway HTTP
       - containerPort: 30080
