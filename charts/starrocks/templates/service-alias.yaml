@@ -1,0 +1,15 @@
+{{/*
+  Alias service so that in-cluster traffic to starrocks.localhost:30080
+  (via CoreDNS rewrite) reaches StarRocks FE HTTP on port 8030.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-alias
+spec:
+  type: ClusterIP
+  ports:
+    - port: 30080
+      targetPort: 8030
+  selector:
+    app: starrocks

@@ -1,11 +1,16 @@
-"""OAuth2 token helper."""
+"""OAuth2 token helper for Keycloak."""
 
 import httpx
-from config import KEYCLOAK_TOKEN_URL
+
+from lib.config import (
+    ADMIN_CLIENT_ID,
+    ADMIN_CLIENT_SECRET,
+    KEYCLOAK_TOKEN_URL,
+)
 
 
 def get_token(client_id: str, client_secret: str, scope: str = "lakekeeper") -> str:
-    """Get an access token from Keycloak using client credentials flow."""
+    """Fetch an access token via the OAuth2 client_credentials flow."""
     response = httpx.post(
         KEYCLOAK_TOKEN_URL,
         data={
@@ -21,8 +26,6 @@ def get_token(client_id: str, client_secret: str, scope: str = "lakekeeper") -> 
 
 
 def admin_headers() -> dict:
-    """Get authorization headers using the admin client."""
-    from config import ADMIN_CLIENT_ID, ADMIN_CLIENT_SECRET
-
+    """Authorization headers using the bootstrap admin client."""
     token = get_token(ADMIN_CLIENT_ID, ADMIN_CLIENT_SECRET)
     return {"Authorization": f"Bearer {token}"}

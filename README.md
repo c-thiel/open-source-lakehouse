@@ -13,7 +13,7 @@ authorization systems, query engines, and the Iceberg REST Catalog together on K
 | [CloudNativePG](https://cloudnative-pg.io/) | PostgreSQL operator | `cnpg-system` |
 | [Sealed Secrets](https://sealed-secrets.netlify.app/) | Encrypt secrets for Git storage | `sealed-secrets` |
 | [Envoy Gateway](https://gateway.envoyproxy.io/) | Ingress with TLS termination | `envoy-gateway-system` |
-| [MinIO](https://min.io/) | S3-compatible object storage | `minio` |
+| [SeaweedFS](https://github.com/seaweedfs/seaweedfs) | S3-compatible object storage | `seaweedfs` |
 | [Keycloak](https://www.keycloak.org/) | Identity provider (OAuth2) | `keycloak` |
 | [Lakekeeper](https://github.com/lakekeeper/lakekeeper) | Iceberg REST Catalog | `lakekeeper` |
 | [OpenFGA](https://openfga.dev/) | Authorization system (bundled with Lakekeeper) | `lakekeeper` |
@@ -43,7 +43,7 @@ services. This allows pods to use the same URLs as your local machine:
 ```bash
 kubectl get configmap coredns -n kube-system -o yaml | \
   sed '/rewrite name.*\.localhost/d' | \
-  sed 's/ready/rewrite name keycloak.localhost keycloak-alias.keycloak.svc.cluster.local\n        rewrite name lakekeeper.localhost lakekeeper-alias.lakekeeper.svc.cluster.local\n        rewrite name s3.localhost minio-alias.minio.svc.cluster.local\n        ready/' | \
+  sed 's/ready/rewrite name keycloak.localhost keycloak-alias.keycloak.svc.cluster.local\n        rewrite name lakekeeper.localhost lakekeeper-alias.lakekeeper.svc.cluster.local\n        rewrite name s3.localhost seaweedfs-alias.seaweedfs.svc.cluster.local\n        rewrite name starrocks.localhost starrocks-alias.starrocks.svc.cluster.local\n        ready/' | \
   kubectl apply -f -
 
 kubectl rollout restart deployment coredns -n kube-system
@@ -79,7 +79,7 @@ You can always check which namespace you're in with:
 kubectl config view --minify --output 'jsonpath={..namespace}'
 ```
 
-### 2. Install components
+### 2a. Install Core components
 
 Install in order — each step depends on the previous one.
 
@@ -107,7 +107,7 @@ helm upgrade --install envoy-gateway charts/envoy-gateway -n envoy-gateway-syste
 
 ```bash
 # Object storage
-helm upgrade --install minio charts/minio -n minio --create-namespace
+helm upgrade --install seaweedfs charts/seaweedfs -n seaweedfs --create-namespace
 ```
 
 ```bash
@@ -121,10 +121,17 @@ helm dependency build charts/lakekeeper
 helm upgrade --install lakekeeper charts/lakekeeper -n lakekeeper --create-namespace
 ```
 
+### 2b. Query Engines
+
 ```bash
 # trino
 helm dependency build charts/trino
 helm upgrade --install trino charts/trino -n trino --create-namespace
+```
+
+```bash
+# starrocks
+helm upgrade --install starrocks charts/starrocks -n starrocks --create-namespace
 ```
 
 ### 3. Access the services
@@ -137,7 +144,7 @@ at the gateway with a self-signed certificate), everything else uses HTTP.
 | Keycloak Admin | https://keycloak.localhost:30443 | admin / admin |
 | Lakekeeper UI | http://lakekeeper.localhost:30080 | (via Keycloak OAuth2) |
 | Trino | https://trino.localhost:30443 | (via Keycloak OAuth2) |
-| MinIO S3 | http://s3.localhost:30080 | `minio-root-user` / `minio-root-password` |
+| SeaweedFS S3 | http://s3.localhost:30080 | `admin` / `adminadmin` |
 
 > **Note:** Keycloak and Trino use a self-signed certificate. You will need to
 > accept the certificate warning in your browser on first visit.
@@ -173,7 +180,7 @@ charts/
   cloudnative-pg/          CloudNativePG operator (cnpg-system)
   sealed-secrets/          Bitnami Sealed Secrets controller (sealed-secrets)
   envoy-gateway/           Envoy Gateway + Gateway + TLS (envoy-gateway-system)
-  minio/                   MinIO S3-compatible object storage (minio)
+  seaweedfs/               SeaweedFS S3-compatible object storage (seaweedfs)
   keycloak/                Keycloak + CNPG Cluster + HTTPRoute (keycloak)
   lakekeeper/              Lakekeeper + OpenFGA + 2x CNPG Cluster + HTTPRoute (lakekeeper)
   trino/                   Trino + Iceberg catalog + HTTPRoute (trino)
@@ -182,32 +189,3 @@ charts/
 Each chart is a thin wrapper around an upstream Helm chart (as a dependency), adding
 workshop-specific configuration, CNPG-managed PostgreSQL clusters, and Gateway API
 routing where needed.
-
-## Architecture
-
-```
-                     ┌──────────────────┐
-                     │  Envoy Gateway   │ ← TLS termination
-                     └────────┬─────────┘
-                              │
-         ┌────────────────────┼────────────────────┐
-         │                    │                     │
-  keycloak.localhost  lakekeeper.localhost   trino.localhost
-         │                    │                     │
-   ┌─────▼──────┐     ┌──────▼───────┐     ┌───────▼────┐
-   │  Keycloak  │     │  Lakekeeper  │     │   Trino    │
-   │  (OAuth2)  │◄────│  (Iceberg    │     │  (multi-   │
-   └────────────┘     │  REST Cat.)  │     │   user)    │
-                      └──────┬───────┘     └─────┬──────┘
-                             │                   │
-                      ┌──────▼───────┐           │
-                      │   OpenFGA    │           │
-                      └──────────────┘           │
-                                                 │
-                      ┌──────────────────────────┘
-                      │
-               ┌──────▼───────┐
-               │    MinIO     │
-               │  (S3 API)    │
-               └──────────────┘
-```

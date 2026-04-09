@@ -1,0 +1,5 @@
+apiVersion: v2
+name: seaweedfs
+description: SeaweedFS object storage with S3 API for the Open Source Lakehouse workshop
+version: 0.1.0
+type: application

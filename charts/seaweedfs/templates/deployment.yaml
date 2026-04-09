@@ -3,52 +3,58 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}
   labels:
-    app: minio
+    app: seaweedfs
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: minio
+      app: seaweedfs
   template:
     metadata:
       labels:
-        app: minio
+        app: seaweedfs
     spec:
       containers:
-        - name: minio
+        - name: seaweedfs
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           args:
             - server
-            - --console-address
-            - ":9001"
-            - /data
+            - -s3
+            - -s3.iam.config=/etc/seaweedfs/iam.json
+            - -ip.bind=0.0.0.0
+            - -dir=/data
           env:
-            - name: MINIO_ROOT_USER
-              value: {{ .Values.rootUser }}
-            - name: MINIO_ROOT_PASSWORD
-              value: {{ .Values.rootPassword }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.s3.accessKey }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.s3.secretKey }}
           ports:
             - name: s3
-              containerPort: 9000
-            - name: console
-              containerPort: 9001
+              containerPort: 8333
+            - name: master
+              containerPort: 9333
+            - name: filer
+              containerPort: 8888
           readinessProbe:
-            exec:
-              command:
-                - mc
-                - ready
-                - local
+            tcpSocket:
+              port: 8333
             initialDelaySeconds: 5
             periodSeconds: 5
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: iam-config
+              mountPath: /etc/seaweedfs
+              readOnly: true
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-data
+        - name: iam-config
+          configMap:
+            name: {{ .Release.Name }}-iam
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

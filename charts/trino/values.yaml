@@ -3,7 +3,9 @@ trino:
     workers: 0
     coordinatorExtraConfig: |
       node-scheduler.include-coordinator=true
-      http-server.authentication.type=oauth2
+      http-server.authentication.type=oauth2,jwt
+      http-server.authentication.jwt.key-file=http://keycloak-alias.keycloak.svc:30443/realms/iceberg/protocol/openid-connect/certs
+      http-server.authentication.jwt.required-audience=trino
       http-server.authentication.oauth2.issuer=https://keycloak.localhost:30443/realms/iceberg
       http-server.authentication.oauth2.oidc.discovery=false
       http-server.authentication.oauth2.auth-url=https://keycloak.localhost:30443/realms/iceberg/protocol/openid-connect/auth
@@ -46,3 +48,7 @@ trino:
 
   service:
     type: ClusterIP
+
+  additionalLogProperties:
+    - "io.trino.filesystem=DEBUG"
+    - "io.trino.plugin.iceberg=DEBUG"

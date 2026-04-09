@@ -1,19 +1,27 @@
-"""Create a warehouse if it does not exist. Print diff if it does."""
+"""Create the demo warehouse if missing; print a diff if it already exists."""
 
 import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import httpx
-from auth import admin_headers
-from config import (
+import urllib3
+
+from lib.auth import admin_headers
+from lib.config import (
     MANAGEMENT_URL,
     S3_ACCESS_KEY,
     S3_BUCKET,
     S3_ENDPOINT,
     S3_REGION,
     S3_SECRET_KEY,
+    WAREHOUSE_NAME,
 )
 
-WAREHOUSE_NAME = "demo"
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 DESIRED_WAREHOUSE = {
     "warehouse-name": WAREHOUSE_NAME,
@@ -36,46 +44,33 @@ DESIRED_WAREHOUSE = {
 }
 
 
-def get_existing_warehouse(headers: dict) -> dict | None:
-    """Get an existing warehouse by name, or None."""
-    response = httpx.get(
-        f"{MANAGEMENT_URL}/v1/warehouse",
-        headers=headers,
-        verify=False,
-    )
+def get_existing(headers: dict) -> dict | None:
+    response = httpx.get(f"{MANAGEMENT_URL}/v1/warehouse", headers=headers, verify=False)
     response.raise_for_status()
-
     for wh in response.json().get("warehouses", []):
         if wh.get("name") == WAREHOUSE_NAME:
             return wh
     return None
 
 
-def diff_warehouse(existing: dict, desired: dict) -> list[str]:
-    """Compare existing warehouse with desired config, return list of diffs."""
+def diff_storage(existing: dict, desired: dict) -> list[str]:
     diffs = []
-    desired_profile = desired["storage-profile"]
-    existing_profile = existing.get("storage-profile", {})
-
-    for key in desired_profile:
+    e = existing.get("storage-profile", {})
+    d = desired["storage-profile"]
+    for key in d:
         if key == "type":
             continue
-        existing_val = existing_profile.get(key)
-        desired_val = desired_profile[key]
-        # Normalize trailing slashes for URL comparison
-        if isinstance(existing_val, str) and isinstance(desired_val, str):
-            existing_val = existing_val.rstrip("/")
-            desired_val = desired_val.rstrip("/")
-        if existing_val != desired_val:
-            diffs.append(f"  storage-profile.{key}: {existing_val!r} -> {desired_val!r}")
-
+        ev, dv = e.get(key), d[key]
+        if isinstance(ev, str) and isinstance(dv, str):
+            ev, dv = ev.rstrip("/"), dv.rstrip("/")
+        if ev != dv:
+            diffs.append(f"  storage-profile.{key}: {ev!r} -> {dv!r}")
     return diffs
 
 
 def main():
     headers = admin_headers()
-
-    existing = get_existing_warehouse(headers)
+    existing = get_existing(headers)
 
     if existing is None:
         print(f"Creating warehouse '{WAREHOUSE_NAME}'...")
@@ -87,18 +82,18 @@ def main():
             timeout=30,
         )
         response.raise_for_status()
-        print(f"Warehouse '{WAREHOUSE_NAME}' created successfully.")
+        print("✓ Created.")
         print(json.dumps(response.json(), indent=2))
         return
 
     print(f"Warehouse '{WAREHOUSE_NAME}' already exists.")
-    diffs = diff_warehouse(existing, DESIRED_WAREHOUSE)
+    diffs = diff_storage(existing, DESIRED_WAREHOUSE)
     if diffs:
-        print("Differences found:")
+        print("Differences:")
         for d in diffs:
             print(d)
     else:
-        print("No differences — warehouse matches desired config.")
+        print("✓ Matches desired config.")
 
 
 if __name__ == "__main__":

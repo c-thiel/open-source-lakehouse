@@ -1,0 +1,18 @@
+{{/*
+  NodePort for StarRocks MySQL protocol (port 9030).
+  kind maps host 30930 -> container 30930 -> this NodePort.
+  MySQL is raw TCP so it cannot go through Envoy Gateway.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-mysql
+spec:
+  type: NodePort
+  ports:
+    - name: mysql
+      port: 9030
+      targetPort: 9030
+      nodePort: 30930
+  selector:
+    app: starrocks

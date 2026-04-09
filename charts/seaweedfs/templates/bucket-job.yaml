@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-create-bucket
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-bucket
+          image: amazon/aws-cli:2.27.28
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ENDPOINT=http://{{ .Release.Name }}:8333
+              BUCKET={{ .Values.bucket }}
+
+              echo "Waiting for SeaweedFS S3..."
+              for i in $(seq 1 30); do
+                aws --endpoint-url "$ENDPOINT" s3 ls >/dev/null 2>&1 && break
+                sleep 5
+              done
+
+              echo "Ensuring bucket $BUCKET exists..."
+              aws --endpoint-url "$ENDPOINT" s3 ls "s3://$BUCKET" >/dev/null 2>&1 \
+                || aws --endpoint-url "$ENDPOINT" s3 mb "s3://$BUCKET"
+
+              echo "Applying CORS policy (so the Lakekeeper UI can browse objects)..."
+              cat > /tmp/cors.json <<'EOF'
+              {
+                "CORSRules": [
+                  {
+                    "AllowedOrigins": [
+                      "https://lakekeeper.localhost:30443",
+                      "http://lakekeeper.localhost:30080"
+                    ],
+                    "AllowedMethods": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+                    "AllowedHeaders": ["*"],
+                    "ExposeHeaders": ["ETag", "x-amz-version-id"],
+                    "MaxAgeSeconds": 3000
+                  }
+                ]
+              }
+              EOF
+              aws --endpoint-url "$ENDPOINT" s3api put-bucket-cors \
+                --bucket "$BUCKET" \
+                --cors-configuration file:///tmp/cors.json
+
+              echo "Done."
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.s3.accessKey }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.s3.secretKey }}
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"

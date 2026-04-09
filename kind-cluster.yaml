@@ -19,3 +19,8 @@ nodes:
         hostPort: 30443
         listenAddress: "127.0.0.1"
         protocol: TCP
+      # StarRocks MySQL protocol (not HTTP, so bypasses Envoy Gateway)
+      - containerPort: 30930
+        hostPort: 30930
+        listenAddress: "127.0.0.1"
+        protocol: TCP

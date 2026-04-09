@@ -655,7 +655,7 @@
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : 0,
     "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "openfga", "lakekeeper", "trino", "phone", "offline_access", "sign", "starrocks", "microprofile-jwt" ]
   }, {
     "id" : "73ee0eb3-206c-4e46-abce-ba0b300f73dd",
     "clientId" : "airflow-sp-1",
@@ -737,7 +737,7 @@
       }
     } ],
     "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "basic", "email" ],
-    "optionalClientScopes" : [ "lakekeeper", "address", "phone", "offline_access", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "lakekeeper", "address", "trino", "phone", "offline_access", "starrocks", "microprofile-jwt" ]
   }, {
     "id" : "ddc9b733-7153-4c0b-8643-712bad894941",
     "clientId" : "airflow-sp-2",
@@ -818,8 +818,8 @@
         "jsonType.label" : "String"
       }
     } ],
-    "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "basic", "email" ],
-    "optionalClientScopes" : [ "lakekeeper", "address", "phone", "offline_access", "microprofile-jwt" ]
+    "defaultClientScopes" : [ "web-origins", "acr", "trino", "roles", "profile", "basic", "email" ],
+    "optionalClientScopes" : [ "lakekeeper", "address", "phone", "offline_access", "starrocks", "microprofile-jwt" ]
   }, {
     "id" : "88da40ac-1d76-4365-985b-5cfb1bd3a3a2",
     "clientId" : "broker",
@@ -1808,6 +1808,31 @@
         "access.token.claim" : "true",
         "claim.name" : "given_name",
         "jsonType.label" : "String"
+      }
+    } ]
+  }, {
+    "id" : "3c01f41f-bc97-4a4e-bba6-0946a6aa1dfd",
+    "name" : "starrocks",
+    "description" : "",
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "include.in.token.scope" : "false",
+      "display.on.consent.screen" : "true",
+      "gui.order" : "",
+      "consent.screen.text" : ""
+    },
+    "protocolMappers" : [ {
+      "id" : "02f209c5-d0f1-40d8-bcdf-27664799749d",
+      "name" : "Add starrocks Audience",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-audience-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "included.client.audience" : "starrocks",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "true",
+        "introspection.token.claim" : "true"
       }
     } ]
   }, {

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-iam
+data:
+  iam.json: |
+    {
+      "sts": {
+        "tokenDuration": "1h",
+        "maxSessionLength": "12h",
+        "issuer": "seaweedfs-sts",
+        "signingKey": "{{ .Values.iam.stsSigningKey }}"
+      },
+      "policies": [
+        {
+          "name": "S3FullAccess",
+          "document": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": ["s3:*"],
+                "Resource": ["*"]
+              }
+            ]
+          }
+        }
+      ],
+      "roles": [
+        {
+          "roleName": "LakekeeperRole",
+          "roleArn": "arn:aws:iam::role/LakekeeperRole",
+          "attachedPolicies": ["S3FullAccess"],
+          "trustPolicy": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": ["sts:AssumeRole"]
+              }
+            ]
+          }
+        }
+      ]
+    }

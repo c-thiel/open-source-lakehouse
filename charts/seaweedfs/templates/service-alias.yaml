@@ -1,0 +1,15 @@
+{{/*
+  Alias service so that in-cluster traffic to seaweedfs.localhost:30080
+  (via CoreDNS rewrite) reaches SeaweedFS S3.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-alias
+spec:
+  type: ClusterIP
+  ports:
+    - port: 30080
+      targetPort: 8333
+  selector:
+    app: seaweedfs

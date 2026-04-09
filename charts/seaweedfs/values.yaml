@@ -1,0 +1,16 @@
+image:
+  repository: chrislusf/seaweedfs
+  tag: "dev"
+
+bucket: examples
+
+s3:
+  accessKey: "admin"
+  secretKey: "adminadmin"
+
+iam:
+  # base64-encoded random key (>= 32 bytes) — workshop only
+  stsSigningKey: "dGhpcy1pcy1hLXdvcmtzaG9wLXN0cy1zaWduaW5nLWtleS0xMjM0NTY3OAo="
+
+storage:
+  size: 5Gi

@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: starrocks
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: starrocks
+  template:
+    metadata:
+      labels:
+        app: starrocks
+    spec:
+      initContainers:
+        # Copy the image's default fe.conf into a writable emptyDir volume,
+        # then append our OAuth2/JWT additions. We can't mount our ConfigMap
+        # directly at fe.conf because the StarRocks entrypoint needs to write
+        # to it, and ConfigMap volumes are read-only.
+        - name: fe-config-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cp /data/deploy/starrocks/fe/conf/fe.conf /fe-conf-writable/fe.conf
+              echo "" >> /fe-conf-writable/fe.conf
+              echo "# === workshop oauth2/jwt additions ===" >> /fe-conf-writable/fe.conf
+              cat /fe-conf-additions/fe.conf >> /fe-conf-writable/fe.conf
+          volumeMounts:
+            - name: fe-config-writable
+              mountPath: /fe-conf-writable
+            - name: fe-config-additions
+              mountPath: /fe-conf-additions
+              readOnly: true
+
+        # Generate a JKS keystore from the PEM TLS cert/key so StarRocks FE
+        # can terminate TLS on the MySQL protocol. The OIDC MySQL auth plugin
+        # refuses to send the JWT over a plain connection.
+        - name: jks-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              rm -f /ssl/keystore.jks /tmp/certificate.p12
+              openssl pkcs12 -export \
+                -in /ssl-pem/tls.crt \
+                -inkey /ssl-pem/tls.key \
+                -out /tmp/certificate.p12 \
+                -name starrocks \
+                -passout pass:{{ .Values.ssl.keystorePassword }}
+              keytool -importkeystore \
+                -srckeystore /tmp/certificate.p12 \
+                -srcstoretype PKCS12 \
+                -srcstorepass {{ .Values.ssl.keystorePassword }} \
+                -destkeystore /ssl/keystore.jks \
+                -deststoretype JKS \
+                -deststorepass {{ .Values.ssl.keystorePassword }} \
+                -destkeypass {{ .Values.ssl.keystorePassword }} \
+                -noprompt
+              echo "keystore.jks created"
+          volumeMounts:
+            - name: ssl-pem
+              mountPath: /ssl-pem
+              readOnly: true
+            - name: ssl-jks
+              mountPath: /ssl
+      containers:
+        - name: starrocks
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: mysql
+              containerPort: 9030
+            - name: http
+              containerPort: 8030
+            - name: be-http
+              containerPort: 8040
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8030
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /data/deploy/starrocks/fe/meta
+              subPath: fe-meta
+            - name: data
+              mountPath: /data/deploy/starrocks/be/storage
+              subPath: be-storage
+            - name: fe-config-writable
+              mountPath: /data/deploy/starrocks/fe/conf/fe.conf
+              subPath: fe.conf
+            - name: ssl-jks
+              mountPath: /etc/starrocks/ssl
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data
+        - name: fe-config-writable
+          emptyDir: {}
+        - name: fe-config-additions
+          configMap:
+            name: {{ .Release.Name }}-fe-config
+        - name: ssl-pem
+          secret:
+            secretName: {{ .Release.Name }}-tls
+        - name: ssl-jks
+          emptyDir: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.size }}

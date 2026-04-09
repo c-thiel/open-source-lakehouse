@@ -1,0 +1,26 @@
+image:
+  repository: starrocks/allin1-ubuntu
+  tag: "4.0.1"
+
+storage:
+  size: 5Gi
+
+ssl:
+  # Keystore password used by the init container and StarRocks FE.
+  # Workshop only — the cert is self-signed and shared with everything else.
+  keystorePassword: "changeit"
+
+oauth2:
+  # OpenID Connect / OAuth2 configuration for StarRocks FE.
+  # Users authenticate with a Keycloak JWT; StarRocks validates it and
+  # forwards the same token to Iceberg REST catalogs configured with
+  # `iceberg.catalog.security = "jwt"`.
+  authServerUrl: "https://keycloak.localhost:30443/realms/iceberg/protocol/openid-connect/auth"
+  tokenServerUrl: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token"
+  jwksUrl: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/certs"
+  issuer: "https://keycloak.localhost:30443/realms/iceberg"
+  audience: "starrocks"
+  principalField: "preferred_username"
+  clientId: "starrocks"
+  clientSecret: "X5IWbfDJBTcU1F3PGZWgxDJwLyuFQmSf"
+  redirectUrl: "http://starrocks.localhost:30080/api/oauth2"

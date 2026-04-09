@@ -50,7 +50,10 @@ lakekeeper:
     oauth2:
       # Server-side OIDC discovery (in-cluster, plain HTTP via CoreDNS rewrite)
       providerUri: "http://keycloak.localhost:30080/realms/iceberg"
-      audience: "lakekeeper"
+      # Comma-separated — Lakekeeper accepts JWTs with any of these in `aud`.
+      # `starrocks` is here so user JWTs minted via the StarRocks scope are
+      # accepted when StarRocks forwards them as part of the JWT passthrough.
+      audience: "lakekeeper,starrocks"
       # Browser tokens have this issuer (external HTTPS URL)
       additionalIssuers:
         - "https://keycloak.localhost:30443/realms/iceberg"
@@ -70,6 +73,12 @@ lakekeeper:
     enabled: true
     image:
       tag: "1.12.1"
+    extraArgs:
+      - "--log-format=text"
+      - "--log-level=debug"
+    opaConfig:
+      decision_logs:
+        console: true
     lakekeeper:
       url: "http://localhost:8181"
       tokenEndpoint: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token"

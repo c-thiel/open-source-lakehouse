@@ -1,0 +1,5 @@
+apiVersion: v2
+name: starrocks
+description: StarRocks (all-in-one) with Iceberg REST catalog for the Open Source Lakehouse workshop
+version: 0.1.0
+type: application
