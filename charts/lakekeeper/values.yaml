@@ -27,6 +27,10 @@ lakekeeper:
 
   authz:
     backend: openfga
+    openfga:
+      # Use trailing-dot FQDN to skip ndots:5 search-suffix expansion, which
+      # otherwise causes the gRPC dialer (tonic) to time out before connecting.
+      endpoint: "http://lakekeeper-openfga.lakekeeper.svc.cluster.local.:8081"
 
   openfga:
     datastore:
@@ -49,14 +53,14 @@ lakekeeper:
   auth:
     oauth2:
       # Server-side OIDC discovery (in-cluster, plain HTTP via CoreDNS rewrite)
-      providerUri: "http://keycloak.localhost:30080/realms/iceberg"
+      providerUri: "http://keycloak.localtest.me:30080/realms/iceberg"
       # Comma-separated — Lakekeeper accepts JWTs with any of these in `aud`.
       # `starrocks` is here so user JWTs minted via the StarRocks scope are
       # accepted when StarRocks forwards them as part of the JWT passthrough.
       audience: "lakekeeper,starrocks"
       # Browser tokens have this issuer (external HTTPS URL)
       additionalIssuers:
-        - "https://keycloak.localhost:30443/realms/iceberg"
+        - "https://keycloak.localtest.me:30443/realms/iceberg"
       ui:
         clientID: "lakekeeper"
 
@@ -66,7 +70,7 @@ lakekeeper:
     config:
       LAKEKEEPER__ALLOW_ORIGIN: "*"
       LAKEKEEPER__DEBUG__LOG_REQUEST_BODIES: "true"
-      LAKEKEEPER__UI__OPENID_PROVIDER_URI: "https://keycloak.localhost:30443/realms/iceberg"
+      LAKEKEEPER__UI__OPENID_PROVIDER_URI: "https://keycloak.localtest.me:30443/realms/iceberg"
       RUST_LOG: "info,lakekeeper=debug"
 
   OPABridge:
@@ -81,7 +85,7 @@ lakekeeper:
         console: true
     lakekeeper:
       url: "http://localhost:8181"
-      tokenEndpoint: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token"
+      tokenEndpoint: "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
       clientId: "opa-bridge"
       clientSecret: "RCUlsviRgBaf8BtHvjSe1BGfmRoRS5KH"
       scope: "lakekeeper"

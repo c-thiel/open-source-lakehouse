@@ -2,18 +2,14 @@
 
 Three tiers:
 
-  1. Server admins
-       - lakehouse-admin   (admin)        ← bootstrap client, already admin
-       - peter             (admin)
-     Server operators (needed by their respective engines for catalog wiring):
+  1. Server operators (needed by their respective engines for catalog wiring):
        - opa-bridge        (operator)     ← Trino's OPA authz query path
        - trino             (operator)
        - starrocks         (operator)     ← + project describe for fetchConfig
 
-  2. Warehouse modify (the trusted writer/reader set):
-       - spark, trino, starrocks, peter, airflow-sp-1
-     This is intentionally bound to the warehouse, not the project — there
-     are NO direct project assignments for these users.
+  2. Warehouse ownership / modify:
+       - peter                              (ownership — the human owner)
+       - spark, trino, starrocks, airflow-sp-1   (modify — trusted writers)
 
   3. Table-level SELECT on finance.product ONLY (the restricted set):
        - airflow-sp-2
@@ -119,8 +115,7 @@ def find_table_id(headers: dict, warehouse_id: str, namespace: str, table: str) 
         ):
             return entry["tabular-id"]["id"]
     raise SystemExit(
-        f"Table {namespace}.{table} not found in warehouse {warehouse_id} — "
-        f"run 03_data.py first."
+        f"Table {namespace}.{table} not found in warehouse {warehouse_id} — run 03_data.py first."
     )
 
 
@@ -177,12 +172,7 @@ def main():
     server_url  = f"{MANAGEMENT_URL}/v1/permissions/server/assignments"
     project_url = f"{MANAGEMENT_URL}/v1/permissions/project/assignments"
 
-    # 2. Server-level: admins + operators
-    print("\nServer admins...")
-    write_assignments(headers, server_url, [
-        {"type": "admin", "user": PETER_USER_ID},
-    ])
-
+    # 2. Server-level: operators only
     print("\nServer operators (engine catalog wiring)...")
     write_assignments(headers, server_url, [
         {"type": "operator", "user": sp_opa},
@@ -203,13 +193,13 @@ def main():
     warehouse_id = find_warehouse_id(headers, WAREHOUSE_NAME)
     warehouse_url = f"{MANAGEMENT_URL}/v1/permissions/warehouse/{warehouse_id}/assignments"
 
-    print(f"\nWarehouse '{WAREHOUSE_NAME}' modify (trusted set)...")
+    print(f"\nWarehouse '{WAREHOUSE_NAME}' ownership + modify...")
     write_assignments(headers, warehouse_url, [
+        {"type": "ownership", "user": PETER_USER_ID},
         {"type": "modify", "user": sp_spark},
         {"type": "modify", "user": sp_trino},
         {"type": "modify", "user": sp_starr},
         {"type": "modify", "user": sp_air1},
-        {"type": "modify", "user": PETER_USER_ID},
     ])
 
     # 4. Table-level SELECT on finance.product for the restricted set
@@ -223,15 +213,6 @@ def main():
     write_assignments(headers, table_url, [
         {"type": "select", "user": sp_air2},
         {"type": "select", "user": ANNA_USER_ID},
-    ])
-
-    # The restricted set must be able to *see* the namespace at all, otherwise
-    # listing tables / catalog discovery returns nothing. Grant minimal
-    # describe at the warehouse scope so they can navigate to product.
-    print("\nWarehouse describe for the restricted set (so they can navigate)...")
-    write_assignments(headers, warehouse_url, [
-        {"type": "describe", "user": sp_air2},
-        {"type": "describe", "user": ANNA_USER_ID},
     ])
 
     print("\nDone.")

@@ -161,11 +161,13 @@ def main():
     print("Loading PyIceberg catalog (custom AuthManager handles login + refresh)...")
     catalog = load_catalog(
         "lakekeeper",
-        type="rest",
-        uri=CATALOG_URL,
-        warehouse=WAREHOUSE_NAME,
-        auth={"type": "device-code"},
-        **{"ssl": {"cabundle": False}},
+        **{  # pyright: ignore[reportArgumentType]
+            "type": "rest",
+            "uri": CATALOG_URL,
+            "warehouse": WAREHOUSE_NAME,
+            "auth": {"type": "device-code"},
+            "ssl": {"cabundle": False},
+        },
     )
 
     print("\n--- list_namespaces ---")

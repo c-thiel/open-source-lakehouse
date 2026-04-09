@@ -8,7 +8,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - trino.localhost
+    - trino.localtest.me
   rules:
     - backendRefs:
         - name: {{ .Release.Name }}

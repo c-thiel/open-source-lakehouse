@@ -97,9 +97,9 @@ def main():
     print(f"Ensuring namespace '{NAMESPACE_NAME}'...")
     try:
         catalog.create_namespace(NAMESPACE_NAME)
-        print(f"  ✓ created")
+        print("  ✓ created")
     except NamespaceAlreadyExistsError:
-        print(f"  (already exists)")
+        print("  (already exists)")
 
     for fqn, schema, rows in [
         (PRODUCT_TABLE_FQN, PRODUCT_SCHEMA, PRODUCT_ROWS),

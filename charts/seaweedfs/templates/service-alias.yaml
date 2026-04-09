@@ -1,5 +1,5 @@
 {{/*
-  Alias service so that in-cluster traffic to seaweedfs.localhost:30080
+  Alias service so that in-cluster traffic to seaweedfs.localtest.me:30080
   (via CoreDNS rewrite) reaches SeaweedFS S3.
 */}}
 apiVersion: v1

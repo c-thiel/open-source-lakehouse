@@ -6,9 +6,9 @@ trino:
       http-server.authentication.type=oauth2,jwt
       http-server.authentication.jwt.key-file=http://keycloak-alias.keycloak.svc:30443/realms/iceberg/protocol/openid-connect/certs
       http-server.authentication.jwt.required-audience=trino
-      http-server.authentication.oauth2.issuer=https://keycloak.localhost:30443/realms/iceberg
+      http-server.authentication.oauth2.issuer=https://keycloak.localtest.me:30443/realms/iceberg
       http-server.authentication.oauth2.oidc.discovery=false
-      http-server.authentication.oauth2.auth-url=https://keycloak.localhost:30443/realms/iceberg/protocol/openid-connect/auth
+      http-server.authentication.oauth2.auth-url=https://keycloak.localtest.me:30443/realms/iceberg/protocol/openid-connect/auth
       http-server.authentication.oauth2.jwks-url=http://keycloak-alias.keycloak.svc:30443/realms/iceberg/protocol/openid-connect/certs
       http-server.authentication.oauth2.token-url=http://keycloak-alias.keycloak.svc:30443/realms/iceberg/protocol/openid-connect/token
       http-server.authentication.oauth2.client-id=trino
@@ -29,11 +29,11 @@ trino:
       iceberg.rest-catalog.warehouse=demo
       iceberg.rest-catalog.security=OAUTH2
       iceberg.rest-catalog.oauth2.credential=trino:AK48QgaKsqdEpP9PomRJw7l2T7qWGHdZ
-      iceberg.rest-catalog.oauth2.server-uri=http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token
+      iceberg.rest-catalog.oauth2.server-uri=http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token
       iceberg.rest-catalog.oauth2.scope=lakekeeper
       iceberg.rest-catalog.vended-credentials-enabled=true
       fs.native-s3.enabled=true
-      s3.endpoint=http://s3.localhost:30080
+      s3.endpoint=http://s3.localtest.me:30080
       s3.region=us-east-1
       s3.path-style-access=true
 

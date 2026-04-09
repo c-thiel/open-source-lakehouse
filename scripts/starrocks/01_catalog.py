@@ -44,14 +44,14 @@ from lib.config import (
 CATALOG_NAME = "lakekeeper"
 
 KEYCLOAK_INCLUSTER_TOKEN_URL = (
-    "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token"
+    "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
 )
 KEYCLOAK_INCLUSTER_JWKS_URL = (
-    "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/certs"
+    "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/certs"
 )
 KEYCLOAK_BROWSER_AUTH_URL = f"{KEYCLOAK_URL}/realms/iceberg/protocol/openid-connect/auth"
 KEYCLOAK_ISSUER = f"{KEYCLOAK_URL}/realms/iceberg"
-STARROCKS_REDIRECT_URL = "http://starrocks.localhost:30080/api/oauth2"
+STARROCKS_REDIRECT_URL = "http://starrocks.localtest.me:30080/api/oauth2"
 
 STARROCKS_HOST = "127.0.0.1"
 STARROCKS_MYSQL_PORT = 30930
@@ -86,7 +86,7 @@ def main():
             "iceberg.catalog.oauth2.credential" = "{STARROCKS_CLIENT_ID}:{STARROCKS_CLIENT_SECRET}",
             "iceberg.catalog.oauth2.scope" = "lakekeeper",
             "iceberg.catalog.token-exchange-enabled" = "false",
-            "aws.s3.endpoint" = "http://s3.localhost:30080",
+            "aws.s3.endpoint" = "http://s3.localtest.me:30080",
             "aws.s3.region" = "us-east-1",
             "aws.s3.enable_path_style_access" = "true",
             "enable_iceberg_metadata_disk_cache" = "false"

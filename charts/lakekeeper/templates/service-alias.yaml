@@ -1,5 +1,5 @@
 {{/*
-  Alias service so that in-cluster traffic to lakekeeper.localhost
+  Alias service so that in-cluster traffic to lakekeeper.localtest.me
   (via CoreDNS rewrite) reaches Lakekeeper on both ports.
 */}}
 apiVersion: v1

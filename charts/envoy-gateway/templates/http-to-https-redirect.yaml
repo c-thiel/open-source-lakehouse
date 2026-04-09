@@ -10,7 +10,7 @@ spec:
       name: eg
       sectionName: http
   hostnames:
-    - trino.localhost
+    - trino.localtest.me
   rules:
     - filters:
         - type: RequestRedirect

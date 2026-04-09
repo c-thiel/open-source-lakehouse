@@ -17,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import time
 
 import httpx
-from pyiceberg.catalog import load_catalog
+from pyiceberg.catalog import Catalog, load_catalog
 
 from lib.config import (
     CATALOG_URL,
@@ -74,7 +74,7 @@ def device_code_login() -> str:
         raise RuntimeError(f"Device flow failed: {response.json()}")
 
 
-def read_table(catalog, fqn: str) -> None:
+def read_table(catalog: Catalog, fqn: str) -> None:
     print(f"\n--- {fqn} ---")
     try:
         table = catalog.load_table(fqn)

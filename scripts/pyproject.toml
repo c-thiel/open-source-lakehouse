@@ -2,12 +2,24 @@
 name = "lakehouse-workshop"
 version = "0.1.0"
 description = "Python scripts for the Open Source Lakehouse workshop"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "httpx==0.28.1",
     "pyiceberg[s3fs,pyarrow]==0.11.1",
     "trino==0.337.0",
     "pymysql==1.1.1",
     "mysql-connector-python>=9.1.0",
-    "pandas"
+    "pandas",
+    "fastavro",
+    "pyspark==4.0.2",
+    "duckdb>=1.4.0",
 ]
+
+[tool.pyright]
+extraPaths = ["."]
+reportImplicitRelativeImport = false
+
+[tool.basedpyright]
+extraPaths = ["."]
+reportImplicitRelativeImport = false
+

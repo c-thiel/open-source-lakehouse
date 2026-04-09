@@ -1,0 +1,11 @@
+{
+  "include": ["scripts"],
+  "exclude": ["scripts/.venv", "**/__pycache__"],
+  "extraPaths": ["scripts"],
+  "venvPath": "scripts",
+  "venv": ".venv",
+  "typeCheckingMode": "standard",
+  "reportImplicitRelativeImport": false,
+  "reportMissingTypeStubs": false,
+  "reportMissingModuleSource": false
+}

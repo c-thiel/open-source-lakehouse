@@ -26,7 +26,7 @@ from lib.config import (
 )
 
 
-TRINO_HOST = "trino.localhost"
+TRINO_HOST = "trino.localtest.me"
 TRINO_PORT = 30443
 CATALOG = "lakekeeper"
 

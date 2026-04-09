@@ -1,5 +1,5 @@
 {{/*
-  Alias service so that in-cluster traffic to keycloak.localhost
+  Alias service so that in-cluster traffic to keycloak.localtest.me
   (via CoreDNS rewrite) reaches Keycloak on both ports.
 */}}
 apiVersion: v1

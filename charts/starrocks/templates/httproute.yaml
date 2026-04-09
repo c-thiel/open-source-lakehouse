@@ -8,7 +8,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - starrocks.localhost
+    - starrocks.localtest.me
   rules:
     - backendRefs:
         - name: {{ .Release.Name }}

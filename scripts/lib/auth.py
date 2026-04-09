@@ -25,7 +25,7 @@ def get_token(client_id: str, client_secret: str, scope: str = "lakekeeper") -> 
     return response.json()["access_token"]
 
 
-def admin_headers() -> dict:
+def admin_headers() -> dict[str, str]:
     """Authorization headers using the bootstrap admin client."""
     token = get_token(ADMIN_CLIENT_ID, ADMIN_CLIENT_SECRET)
     return {"Authorization": f"Bearer {token}"}

@@ -8,7 +8,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - keycloak.localhost
+    - keycloak.localtest.me
   rules:
     - backendRefs:
         - name: {{ .Release.Name }}
@@ -30,7 +30,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - keycloak.localhost
+    - keycloak.localtest.me
   rules:
     - backendRefs:
         - name: {{ .Release.Name }}

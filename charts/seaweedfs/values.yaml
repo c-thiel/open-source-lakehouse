@@ -1,6 +1,6 @@
 image:
   repository: chrislusf/seaweedfs
-  tag: "dev"
+  tag: "4.19"
 
 bucket: examples
 

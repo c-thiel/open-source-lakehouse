@@ -15,12 +15,12 @@ oauth2:
   # Users authenticate with a Keycloak JWT; StarRocks validates it and
   # forwards the same token to Iceberg REST catalogs configured with
   # `iceberg.catalog.security = "jwt"`.
-  authServerUrl: "https://keycloak.localhost:30443/realms/iceberg/protocol/openid-connect/auth"
-  tokenServerUrl: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/token"
-  jwksUrl: "http://keycloak.localhost:30080/realms/iceberg/protocol/openid-connect/certs"
-  issuer: "https://keycloak.localhost:30443/realms/iceberg"
+  authServerUrl: "https://keycloak.localtest.me:30443/realms/iceberg/protocol/openid-connect/auth"
+  tokenServerUrl: "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
+  jwksUrl: "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/certs"
+  issuer: "https://keycloak.localtest.me:30443/realms/iceberg"
   audience: "starrocks"
   principalField: "preferred_username"
   clientId: "starrocks"
   clientSecret: "X5IWbfDJBTcU1F3PGZWgxDJwLyuFQmSf"
-  redirectUrl: "http://starrocks.localhost:30080/api/oauth2"
+  redirectUrl: "http://starrocks.localtest.me:30080/api/oauth2"

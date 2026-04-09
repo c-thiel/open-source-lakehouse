@@ -36,8 +36,8 @@ spec:
                 "CORSRules": [
                   {
                     "AllowedOrigins": [
-                      "https://lakekeeper.localhost:30443",
-                      "http://lakekeeper.localhost:30080"
+                      "https://lakekeeper.localtest.me:30443",
+                      "http://lakekeeper.localtest.me:30080"
                     ],
                     "AllowedMethods": ["GET", "POST", "PUT", "DELETE", "HEAD"],
                     "AllowedHeaders": ["*"],

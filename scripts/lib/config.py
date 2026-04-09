@@ -6,7 +6,7 @@ from pathlib import Path
 
 # --- Import shim helper ---------------------------------------------------
 # Scripts in subfolders import from `lib.config` — but only when run with the
-# scripts/ directory on sys.path. Each script in setup/, oauth/, pyiceberg/,
+# scripts/ directory on sys.path. Each script in 00_setup/, oauth/, pyiceberg/,
 # trino/, starrocks/ adds the following two lines at the top:
 #
 #     import sys; from pathlib import Path
@@ -15,13 +15,17 @@ from pathlib import Path
 # That makes `from lib.config import ...` work no matter the cwd.
 
 # --- Lakekeeper -----------------------------------------------------------
-LAKEKEEPER_URL = "http://lakekeeper.localhost:30080"
+LAKEKEEPER_URL = "http://lakekeeper.localtest.me:30080"
 CATALOG_URL = f"{LAKEKEEPER_URL}/catalog"
 MANAGEMENT_URL = f"{LAKEKEEPER_URL}/management"
 
 # --- Keycloak -------------------------------------------------------------
-KEYCLOAK_URL = "https://keycloak.localhost:30443"
-KEYCLOAK_TOKEN_URL = f"{KEYCLOAK_URL}/realms/iceberg/protocol/openid-connect/token"
+# HTTPS frontend (used by browsers / human flows). Self-signed cert.
+KEYCLOAK_URL = "https://keycloak.localtest.me:30443"
+# Plain-HTTP token endpoint for scripts and m2m flows. Avoids the self-signed
+# cert headache for libraries (e.g. PyIceberg's auth manager) that don't
+# expose a way to disable TLS verification on the token request.
+KEYCLOAK_TOKEN_URL = "http://keycloak.localtest.me:30080/realms/iceberg/protocol/openid-connect/token"
 
 # --- Bootstrap admin client ----------------------------------------------
 ADMIN_CLIENT_ID = "lakehouse-admin"
@@ -79,7 +83,7 @@ PETER_USER_ID = "oidc~cfb55bf6-fcbb-4a1e-bfec-30c6649b52f8"
 ANNA_USER_ID = "oidc~d223d88c-85b6-4859-b5c5-27f3825e47f6"
 
 # --- SeaweedFS S3 ---------------------------------------------------------
-S3_ENDPOINT = "http://s3.localhost:30080"
+S3_ENDPOINT = "http://s3.localtest.me:30080"
 S3_BUCKET = "examples"
 S3_ACCESS_KEY = "admin"
 S3_SECRET_KEY = "adminadmin"

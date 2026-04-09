@@ -34,7 +34,7 @@ from lib.config import (
 )
 
 
-TRINO_HOST = "trino.localhost"
+TRINO_HOST = "trino.localtest.me"
 TRINO_PORT = 30443
 CATALOG = "lakekeeper"
 REFRESH_MARGIN_SECONDS = 30
@@ -56,7 +56,8 @@ class ClientCredentialsTokenProvider:
         with self._lock:
             if self._token is None or time.monotonic() >= self._expires_at:
                 self._refresh()
-            return self._token  # type: ignore[return-value]
+            assert self._token is not None
+            return self._token
 
     def _refresh(self) -> None:
         response = httpx.post(
